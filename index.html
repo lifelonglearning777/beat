@@ -144,6 +144,8 @@
   }
   .backup-btn:hover{border-color:var(--cyan);color:var(--cyan);}
   .backup-btn:active{transform:scale(.97);background:var(--bg-elevated-2);color:var(--cyan);}
+  .student-export-btn{border-color:rgba(255,210,63,.3);color:var(--yellow);}
+  .student-export-btn:hover{border-color:var(--yellow);color:var(--yellow);box-shadow:0 0 12px rgba(255,210,63,.25);}
   .lesson-grid{
     display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
     gap:20px;max-width:1400px;width:100%;margin:0;
@@ -616,6 +618,7 @@
     <div class="backup-row" id="backupRow">
       <button class="backup-btn" id="exportBtn">⬇ Export lessons</button>
       <button class="backup-btn" id="importBtn">⬆ Import lessons</button>
+      <button class="backup-btn student-export-btn" id="exportStudentBtn">🎓 Export Student Version</button>
       <input type="file" id="importFile" accept="application/json" style="display:none">
     </div>
     <div class="lesson-grid" id="lessonGrid"></div>
@@ -734,12 +737,38 @@ function w(text, stress, dur, chunkEnd, pauseAfter, opts){
           onBeat: !!opts.onBeat};
 }
 
-// Built-in sample lessons removed — this app now runs entirely on
-// teacher-added lessons (see CUSTOM (TEACHER-ADDED) LESSONS below).
-// The w()/word-object shape above is still what every lesson (built-in or
-// custom) uses internally, so a future built-in lesson can be added here
-// the same way the samples used to be, with zero changes to the engine.
+// Built-in sample lessons — normally empty; the "Export Student Version"
+// feature (Teacher Mode only) generates a standalone copy of this file with
+// the teacher's finished lessons baked in HERE as plain data, and
+// FORCE_STUDENT_ONLY flipped to true below. Nothing about the engine
+// changes to support this — a built-in lesson is loaded exactly the same
+// way a custom one is, just skipping the "raw → built" conversion step
+// since it's already pre-built JSON.
 const LESSONS = [];
+
+// When true (only ever true in an exported "student" copy of this file),
+// the app never shows the Teacher Mode switch, never reads/writes custom
+// lessons from localStorage, and only ever displays the lessons baked into
+// LESSONS[] above — a locked-down build with nothing to accidentally edit.
+// This is for a fully DETACHED file (emailed, uploaded to an LMS, etc.)
+// where there's no shared origin to read live lesson data from.
+const FORCE_STUDENT_ONLY = false;
+
+// =========================================================================
+// URL-BASED TEACHER/STUDENT SPLIT (the "/editor" pattern)
+// -------------------------------------------------------------------------
+// Deploy this exact same file at TWO paths on the same site — e.g. on
+// GitHub Pages, the repo root (yoursite.github.io/word-on-beat/) AND a copy
+// in an /editor subfolder (yoursite.github.io/word-on-beat/editor/). Both
+// copies share the SAME localStorage (same origin — the path doesn't
+// matter for that), so a lesson added at /editor shows up at the root
+// automatically, with no export/import step. The root path is always
+// locked to student view; /editor always allows the Teacher Mode switch.
+// Opening the file directly (file://, or from localhost while developing)
+// is never locked, so the everyday single-file workflow is unaffected.
+const IS_HOSTED = location.protocol === "http:" || location.protocol === "https:";
+const IS_EDITOR_PATH = /\/editor(\/|\.html|$)/i.test(location.pathname);
+const URL_LOCKS_STUDENT = IS_HOSTED && !IS_EDITOR_PATH;
 
 /* =========================================================================
    CUSTOM (TEACHER-ADDED) LESSONS
@@ -865,7 +894,7 @@ function buildChunks(lesson){
 }
 LESSONS.forEach(buildChunks);
 
-let ALL_LESSONS = LESSONS.concat(loadCustomLessons());
+let ALL_LESSONS = FORCE_STUDENT_ONLY ? LESSONS.slice() : LESSONS.concat(loadCustomLessons());
 
 /* =========================================================================
    AUDIO ENGINE  (Web Audio, synthesized — no sample files)
@@ -1335,11 +1364,16 @@ const lessonGrid = document.getElementById("lessonGrid");
    nothing changes for existing use until it's deliberately turned off;
    persisted per browser. */
 const TEACHER_MODE_KEY = "rr_teacher_mode";
-let teacherMode = localStorage.getItem(TEACHER_MODE_KEY) !== "0";
+const LOCKED = FORCE_STUDENT_ONLY || URL_LOCKS_STUDENT;
+let teacherMode = LOCKED ? false : (localStorage.getItem(TEACHER_MODE_KEY) !== "0");
 function applyTeacherMode(){
   document.getElementById("teacherToggle").classList.toggle("on", teacherMode);
   document.getElementById("teacherToggleWrap").classList.toggle("on", teacherMode);
   document.getElementById("teacherToggleLabel").textContent = teacherMode ? "Teacher Mode: ON" : "Teacher Mode: OFF";
+  // locked builds/URLs never show the switch — there's nothing to turn
+  // back on, on purpose (a curious student on the root URL shouldn't be
+  // able to flip their way into the editor).
+  document.getElementById("teacherToggleWrap").style.display = LOCKED ? "none" : "flex";
   document.getElementById("backupRow").style.display = teacherMode ? "flex" : "none";
   // when the export/import row is hidden, the card grid loses that row's
   // margin and sits uncomfortably close under the title — add the space
@@ -1348,6 +1382,7 @@ function applyTeacherMode(){
   renderLessonGrid();
 }
 document.getElementById("teacherToggleWrap").addEventListener("click", ()=>{
+  if (LOCKED) return;
   teacherMode = !teacherMode;
   localStorage.setItem(TEACHER_MODE_KEY, teacherMode ? "1" : "0");
   applyTeacherMode();
@@ -1747,6 +1782,54 @@ document.getElementById("importFile").addEventListener("change", (e)=>{
     e.target.value = "";
   };
   reader.readAsText(file);
+});
+
+/* ---------- Export Student Version ----------
+   Builds a completely separate, self-contained HTML file: same app, same
+   engine, but with the teacher's current lessons baked in as read-only
+   built-ins and every editing/teacher-mode affordance switched off at the
+   source level (not just hidden by a toggle a student could flip back).
+   This is the "give students something they can only practice, not touch"
+   version — like a separate student build, handed out as its own file
+   rather than relying on localStorage (which never follows to another
+   device anyway) or JSON import (which the spec explicitly said students
+   shouldn't have to do). */
+document.getElementById("exportStudentBtn").addEventListener("click", ()=>{
+  const customList = ALL_LESSONS.filter(l => l.custom);
+  if (!customList.length){
+    alert("Add at least one lesson first — the student version bakes in whatever lessons you currently have.");
+    return;
+  }
+  // full page source, exactly as shipped (script tag contents are never
+  // rewritten by the app itself at runtime, so this is safe to reuse)
+  let src = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+
+  // give each baked-in lesson a cleaner badge than "Your text" — this is
+  // now the teacher's finished material, not a draft
+  const baked = customList.map(l => ({...l, badge: "Lesson"}));
+
+  const lessonsLiteral = JSON.stringify(baked);
+  if (!src.includes("const LESSONS = [];")){
+    alert("Couldn't find the lesson data slot to bake into — export cancelled.");
+    return;
+  }
+  src = src.replace("const LESSONS = [];", "const LESSONS = " + lessonsLiteral + ";");
+
+  if (!src.includes("const FORCE_STUDENT_ONLY = false;")){
+    alert("Couldn't lock the student build — export cancelled.");
+    return;
+  }
+  src = src.replace("const FORCE_STUDENT_ONLY = false;", "const FORCE_STUDENT_ONLY = true;");
+
+  const blob = new Blob([src], {type: "text/html"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "word-on-beat-student.html";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=> URL.revokeObjectURL(url), 1000);
 });
 
 /* =========================================================================

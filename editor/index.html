@@ -83,47 +83,47 @@
   /* ================= HOME / LESSON PICKER ================= */
   #home{
     height:100%;display:flex;flex-direction:column;padding:28px 20px 20px;
-    overflow-y:auto;
+    overflow-y:auto;position:relative;
   }
-  .home-title-row{display:flex;align-items:center;gap:14px;margin:0 0 2px;flex-wrap:wrap;}
-  .teacher-toggle-wrap{
-    display:flex;align-items:center;gap:10px;
-    background:var(--bg-elevated);border:1px solid var(--line);border-radius:999px;
-    padding:6px 8px 6px 16px;transition:border-color .2s;
+  /* ---------- atmospheric background (inspired by LEARNING LAB) ----------
+     A soft glow + faint drifting stars behind the content, purely
+     decorative (aria-hidden, pointer-events:none) — doesn't affect layout
+     or interaction, just gives the home screen some depth instead of flat
+     black. Kept subtle so it never competes with the lesson cards. */
+  .home-bg{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0;}
+  .home-glow{
+    position:absolute;top:-30%;left:50%;transform:translateX(-50%);
+    width:900px;height:900px;border-radius:50%;
+    background:radial-gradient(circle, rgba(94,231,255,.10) 0%, rgba(255,210,63,.05) 40%, transparent 70%);
+    filter:blur(10px);
   }
-  .teacher-toggle-wrap.on{border-color:rgba(94,231,255,.4);}
-  .teacher-toggle-label{
-    font-family:var(--en);font-size:11px;font-weight:700;letter-spacing:.04em;
-    color:var(--text-dim);text-transform:uppercase;
+  .home-stars{
+    position:absolute;inset:0;
+    background-image:
+      radial-gradient(1.5px 1.5px at 8% 20%, rgba(255,255,255,.5), transparent),
+      radial-gradient(1.5px 1.5px at 22% 65%, rgba(255,255,255,.35), transparent),
+      radial-gradient(1px 1px at 38% 12%, rgba(94,231,255,.5), transparent),
+      radial-gradient(1.5px 1.5px at 52% 78%, rgba(255,255,255,.3), transparent),
+      radial-gradient(1px 1px at 68% 30%, rgba(255,210,63,.45), transparent),
+      radial-gradient(1.5px 1.5px at 80% 55%, rgba(255,255,255,.4), transparent),
+      radial-gradient(1px 1px at 92% 15%, rgba(94,231,255,.4), transparent),
+      radial-gradient(1.5px 1.5px at 15% 90%, rgba(255,255,255,.3), transparent);
+    animation:twinkle 5s ease-in-out infinite;
   }
-  .teacher-toggle-wrap.on .teacher-toggle-label{color:var(--cyan);}
-  .teacher-toggle{
-    position:relative;width:44px;height:26px;border-radius:999px;flex:0 0 auto;
-    background:var(--bg-elevated-2);border:1px solid var(--line);
-    transition:background .25s, border-color .25s;
-  }
-  .teacher-toggle::after{
-    content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;
-    background:var(--text-dim);transition:transform .25s cubic-bezier(.34,1.56,.64,1), background .25s;
-  }
-  .teacher-toggle.on{
-    background:linear-gradient(90deg, rgba(94,231,255,.35), rgba(94,231,255,.65));
-    border-color:var(--cyan);box-shadow:0 0 12px rgba(94,231,255,.35);
-  }
-  .teacher-toggle.on::after{transform:translateX(18px);background:#04121a;}
-  .teacher-toggle:active::after{width:23px;}
+  @keyframes twinkle{0%,100%{opacity:.7;}50%{opacity:1;}}
+  .home-title-row{display:flex;align-items:center;gap:14px;margin:0 0 2px;flex-wrap:wrap;position:relative;z-index:1;}
   .home-title{
     font-family:var(--en);font-weight:800;font-size:clamp(30px,7.5vw,44px);
     letter-spacing:-0.03em;margin:0;line-height:1;
   }
   .home-title .accent{
     color:var(--yellow);
-    text-shadow:0 0 18px rgba(255,210,63,.55), 0 0 40px rgba(255,210,63,.25);
+    text-shadow:0 0 10px rgba(255,210,63,.3);
   }
-  .eq-bars{display:flex;align-items:flex-end;gap:3px;height:26px;flex:0 0 auto;}
+  .eq-bars{display:flex;align-items:flex-end;gap:3px;height:26px;flex:0 0 auto;opacity:.55;}
   .eq-bars span{
     width:4px;border-radius:2px;
-    background:linear-gradient(180deg, var(--yellow), var(--cyan));
+    background:linear-gradient(180deg, rgba(255,210,63,.7), rgba(94,231,255,.7));
     animation:eqbounce 1.1s ease-in-out infinite;
   }
   .eq-bars span:nth-child(1){height:40%;animation-delay:0s;}
@@ -135,7 +135,7 @@
     50%{transform:scaleY(1);}
   }
   .home-sub{color:var(--text-dim);font-size:14px;margin:0 0 26px;}
-  .backup-row{display:flex;gap:10px;margin:18px 0 16px;flex-wrap:wrap;max-width:1400px;width:100%;}
+  .backup-row{display:flex;gap:10px;margin:18px 0 16px;flex-wrap:wrap;max-width:1400px;width:100%;position:relative;z-index:1;}
   .backup-btn{
     font-family:var(--en);font-size:12.5px;font-weight:700;letter-spacing:.01em;color:var(--text-dim);
     background:linear-gradient(180deg, var(--bg-elevated-2), var(--bg-elevated));
@@ -144,11 +144,9 @@
   }
   .backup-btn:hover{border-color:var(--cyan);color:var(--cyan);}
   .backup-btn:active{transform:scale(.97);background:var(--bg-elevated-2);color:var(--cyan);}
-  .student-export-btn{border-color:rgba(255,210,63,.3);color:var(--yellow);}
-  .student-export-btn:hover{border-color:var(--yellow);color:var(--yellow);box-shadow:0 0 12px rgba(255,210,63,.25);}
   .lesson-grid{
     display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
-    gap:20px;max-width:1400px;width:100%;margin:0;
+    gap:20px;max-width:1400px;width:100%;margin:0;position:relative;z-index:1;
   }
   .lesson-card{
     background:linear-gradient(165deg, var(--bg-elevated-2), var(--bg-elevated));
@@ -159,18 +157,21 @@
   }
   .lesson-card::before{
     content:'';position:absolute;top:0;left:0;right:0;height:3px;
-    background:linear-gradient(90deg, var(--cyan), var(--yellow));
+    background:linear-gradient(90deg, var(--card-accent-1, var(--cyan)), var(--card-accent-2, var(--yellow)));
     opacity:.7;transition:opacity .18s;
   }
   .lesson-card:active{transform:scale(0.98);}
   .lesson-card:hover{
-    border-color:rgba(94,231,255,.5);
-    box-shadow:0 8px 28px rgba(0,0,0,.35), 0 0 0 1px rgba(94,231,255,.1);
+    border-color:var(--card-accent-1, var(--cyan));
+    box-shadow:0 8px 28px rgba(0,0,0,.35);
     transform:translateY(-2px);
   }
-  .lesson-card:hover::before{opacity:1;box-shadow:0 0 10px rgba(94,231,255,.6);}
+  .lesson-card:hover::before{opacity:1;}
+  .lesson-card .lc-note{
+    position:absolute;top:16px;right:18px;font-size:20px;opacity:.5;
+  }
   .lesson-card .lc-badge{display:none;}
-  .lesson-card .lc-title{font-family:var(--en);font-weight:800;font-size:21px;letter-spacing:-.01em;}
+  .lesson-card .lc-title{font-family:var(--en);font-weight:800;font-size:21px;letter-spacing:-.01em;padding-right:20px;}
   .lesson-card .lc-meta{color:var(--text-dim);font-size:12.5px;margin-top:2px;}
   .home-foot{margin-top:auto;padding-top:18px;color:var(--text-dim);font-size:11.5px;line-height:1.6;}
 
@@ -202,11 +203,11 @@
     background:var(--bg-elevated-2);border-radius:2px;outline:none;cursor:pointer;
   }
   .vol-control input[type="range"]::-webkit-slider-thumb{
-    -webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;
-    background:var(--cyan);cursor:pointer;
+    -webkit-appearance:none;appearance:none;width:14px;height:14px;border-radius:50%;
+    background:rgba(94,231,255,.75);cursor:pointer;
   }
   .vol-control input[type="range"]::-moz-range-thumb{
-    width:16px;height:16px;border-radius:50%;background:var(--cyan);border:none;cursor:pointer;
+    width:14px;height:14px;border-radius:50%;background:rgba(94,231,255,.75);border:none;cursor:pointer;
   }
   .topbar-title{
     font-family:var(--en);font-weight:700;font-size:14px;color:var(--text-dim);
@@ -219,7 +220,7 @@
     font-family:var(--en);font-size:11px;font-weight:700;letter-spacing:.04em;
     padding:6px 12px;border-radius:999px;color:var(--text-dim);min-height:30px;
   }
-  .mode-btn.active{background:var(--cyan);color:#04121a;}
+  .mode-btn.active{background:rgba(94,231,255,.85);color:#04121a;}
   .mode-caption{
     text-align:center;font-family:var(--en);font-size:11px;color:var(--text-dim);
     letter-spacing:.03em;padding:2px 0 0;
@@ -413,19 +414,42 @@
 
   /* ---------- controls ---------- */
   .controls{
-    flex:0 0 auto;padding:10px 16px max(14px, env(safe-area-inset-bottom));
-    display:flex;flex-direction:column;gap:10px;align-items:center;
+    flex:0 0 auto;padding:8px 16px max(12px, env(safe-area-inset-bottom));
+    display:flex;flex-direction:column;gap:10px;align-items:center;position:relative;
     background:linear-gradient(to top, var(--bg-elevated) 0%, transparent 100%);
   }
-  .controls-row{
-    display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;width:100%;
+  /* main actions: the only thing that actually needs to grab attention.
+     Speed/volume/text-size used to sit here permanently, which was taking
+     real estate away from the lyrics themselves — those are "set once and
+     forget" settings, not something read every few seconds like the mode
+     tabs, so they're tucked behind the gear icon instead (see popover
+     below) and only take up space when actually opened. */
+  .main-row{
+    display:flex;align-items:center;justify-content:center;gap:14px;
   }
-  .speed-row{display:flex;gap:6px;background:var(--bg-elevated);padding:4px;border-radius:999px;flex:0 0 auto;}
+  .settings-gear{
+    font-size:18px;background:var(--bg-elevated);border:1px solid var(--line);
+    border-radius:999px;transition:border-color .2s, color .2s, transform .2s;
+  }
+  .settings-gear.open{color:var(--cyan);border-color:var(--cyan);transform:rotate(35deg);}
+  .settings-gear:active{transform:scale(.93);}
+  .settings-popover{
+    display:none;flex-direction:column;gap:8px;
+    background:var(--bg-elevated);border:1px solid var(--line);border-radius:14px;
+    padding:12px 14px;width:100%;max-width:360px;margin-bottom:2px;
+  }
+  .settings-popover.open{display:flex;}
+  .settings-popover-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .settings-popover-label{
+    font-family:var(--en);font-size:12px;font-weight:700;color:var(--text-dim);
+    letter-spacing:.02em;flex:0 0 auto;
+  }
+  .speed-row{display:flex;gap:6px;background:var(--bg-elevated-2);padding:4px;border-radius:999px;flex:0 0 auto;}
   .speed-btn{
     font-family:var(--en);font-size:12.5px;font-weight:700;letter-spacing:.03em;
     padding:7px 16px;border-radius:999px;color:var(--text-dim);min-height:36px;
   }
-  .speed-btn.active{background:var(--cyan);color:#04121a;}
+  .speed-btn.active{background:rgba(94,231,255,.85);color:#04121a;}
 
   .wide-btn{
     font-family:var(--en);font-weight:800;font-size:15px;letter-spacing:.02em;
@@ -441,9 +465,9 @@
   .again-wide:active{background:var(--bg-elevated-2);}
   .play-wide{
     background:linear-gradient(180deg, #ffe27a, var(--yellow));color:#1a1200;min-width:130px;
-    box-shadow:0 0 18px rgba(255,210,63,.35);
+    box-shadow:0 0 10px rgba(255,210,63,.2);
   }
-  .play-wide:active{box-shadow:0 0 10px rgba(255,210,63,.25);}
+  .play-wide:active{box-shadow:0 0 6px rgba(255,210,63,.15);}
 
   .hint{
     font-family:var(--en);font-size:12px;color:var(--text-dim);text-align:center;
@@ -606,19 +630,17 @@
 
   <!-- ============ HOME ============ -->
   <div id="home">
+    <div class="home-bg" aria-hidden="true">
+      <div class="home-glow"></div>
+      <div class="home-stars"></div>
+    </div>
     <div class="home-title-row">
       <h1 class="home-title">Word <span class="accent">on Beat</span></h1>
       <div class="eq-bars"><span></span><span></span><span></span><span></span></div>
-      <div style="flex:1"></div>
-      <button class="teacher-toggle-wrap" id="teacherToggleWrap" aria-label="Toggle teacher mode">
-        <span class="teacher-toggle-label" id="teacherToggleLabel">Teacher Mode</span>
-        <span class="teacher-toggle" id="teacherToggle"></span>
-      </button>
     </div>
     <div class="backup-row" id="backupRow">
       <button class="backup-btn" id="exportBtn">⬇ Export lessons</button>
       <button class="backup-btn" id="importBtn">⬆ Import lessons</button>
-      <button class="backup-btn student-export-btn" id="exportStudentBtn">🎓 Export Student Version</button>
       <input type="file" id="importFile" accept="application/json" style="display:none">
     </div>
     <div class="lesson-grid" id="lessonGrid"></div>
@@ -671,29 +693,46 @@
       <div style="flex:1"></div>
       <button class="icon-btn" id="fsBtn" aria-label="Fullscreen">⤢</button>
     </div>
-    <div class="stage-main"><div class="rhythm-text" id="rhythmText"></div><div class="countin-circle" id="countInCircle"></div></div>
+    <div class="stage-main">
+      <div class="rhythm-text" id="rhythmText"></div>
+      <div class="countin-circle" id="countInCircle"></div>
+    </div>
     <div class="beat-row" id="beatRow"></div>
     <div class="controls">
       <div class="mode-caption" id="modeCaption">BIG = strong</div>
-      <div class="controls-row">
-        <div class="mode-row" id="modeRow">
-          <button class="mode-btn" data-mode="stress">STRESS</button>
-          <button class="mode-btn" data-mode="beat">BEAT</button>
-          <button class="mode-btn" data-mode="both">BOTH</button>
+      <div class="mode-row" id="modeRow">
+        <button class="mode-btn" data-mode="stress">STRESS</button>
+        <button class="mode-btn" data-mode="beat">BEAT</button>
+        <button class="mode-btn" data-mode="both">BOTH</button>
+      </div>
+
+      <div class="settings-popover" id="settingsPopover">
+        <div class="settings-popover-row">
+          <span class="settings-popover-label">Speed</span>
+          <div class="speed-row" id="speedRow">
+            <button class="speed-btn" data-speed="0.7">Slow</button>
+            <button class="speed-btn active" data-speed="1">Normal</button>
+            <button class="speed-btn" data-speed="1.35">Fast</button>
+          </div>
         </div>
-        <div class="speed-row" id="speedRow">
-          <button class="speed-btn" data-speed="0.7">Slow</button>
-          <button class="speed-btn active" data-speed="1">Normal</button>
-          <button class="speed-btn" data-speed="1.35">Fast</button>
+        <div class="settings-popover-row">
+          <span class="settings-popover-label">Beat</span>
+          <div class="vol-control" title="Metronome volume — tap the speaker to mute">
+            <button class="vol-icon" id="volMuteBtn" aria-label="Mute metronome">🔊</button>
+            <input type="range" id="metroVolSlider" min="0" max="100" step="5" value="60">
+          </div>
         </div>
-        <div class="vol-control" title="Metronome volume — tap the speaker to mute">
-          <button class="vol-icon" id="volMuteBtn" aria-label="Mute metronome">🔊</button>
-          <input type="range" id="metroVolSlider" min="0" max="100" step="5" value="60">
+        <div class="settings-popover-row">
+          <span class="settings-popover-label">Text size</span>
+          <div class="vol-control" title="Text size — different screens fit differently">
+            <span class="vol-icon" aria-hidden="true">Aa</span>
+            <input type="range" id="textSizeSlider" min="70" max="140" step="5" value="100">
+          </div>
         </div>
-        <div class="vol-control" title="Text size — different screens fit differently">
-          <span class="vol-icon" aria-hidden="true">Aa</span>
-          <input type="range" id="textSizeSlider" min="70" max="140" step="5" value="100">
-        </div>
+      </div>
+
+      <div class="main-row">
+        <button class="icon-btn settings-gear" id="settingsToggle" aria-label="Settings">⚙</button>
         <button class="wide-btn again-wide" id="againBtn" aria-label="Again">↺ Again</button>
         <button class="wide-btn play-wide" id="playBtn">▶ Start</button>
       </div>
@@ -1360,20 +1399,13 @@ const lessonGrid = document.getElementById("lessonGrid");
 
 /* Teacher Mode — hides every editing affordance (edit/delete icons, the
    "add your own text" card, export/import) so the home screen is safe to
-   project for students: just a list of songs to tap. Defaults to ON so
-   nothing changes for existing use until it's deliberately turned off;
-   persisted per browser. */
-const TEACHER_MODE_KEY = "rr_teacher_mode";
+   hand to students: just a list of songs to tap. This is now determined
+   entirely by the URL (see IS_EDITOR_PATH / URL_LOCKS_STUDENT above) — the
+   /editor path is the teacher's, everything else is locked. No manual
+   switch, nothing for a student to toggle their way past. */
 const LOCKED = FORCE_STUDENT_ONLY || URL_LOCKS_STUDENT;
-let teacherMode = LOCKED ? false : (localStorage.getItem(TEACHER_MODE_KEY) !== "0");
+const teacherMode = !LOCKED;
 function applyTeacherMode(){
-  document.getElementById("teacherToggle").classList.toggle("on", teacherMode);
-  document.getElementById("teacherToggleWrap").classList.toggle("on", teacherMode);
-  document.getElementById("teacherToggleLabel").textContent = teacherMode ? "Teacher Mode: ON" : "Teacher Mode: OFF";
-  // locked builds/URLs never show the switch — there's nothing to turn
-  // back on, on purpose (a curious student on the root URL shouldn't be
-  // able to flip their way into the editor).
-  document.getElementById("teacherToggleWrap").style.display = LOCKED ? "none" : "flex";
   document.getElementById("backupRow").style.display = teacherMode ? "flex" : "none";
   // when the export/import row is hidden, the card grid loses that row's
   // margin and sits uncomfortably close under the title — add the space
@@ -1381,19 +1413,35 @@ function applyTeacherMode(){
   lessonGrid.style.marginTop = teacherMode ? "0" : "26px";
   renderLessonGrid();
 }
-document.getElementById("teacherToggleWrap").addEventListener("click", ()=>{
-  if (LOCKED) return;
-  teacherMode = !teacherMode;
-  localStorage.setItem(TEACHER_MODE_KEY, teacherMode ? "1" : "0");
-  applyTeacherMode();
-});
+
+// A small curated palette so each song card reads as its own "album" at a
+// glance, rather than every card looking identical apart from the title —
+// picked deterministically from the lesson id/title so it's stable across
+// re-renders (same song always gets the same colors, not random each time).
+const CARD_PALETTES = [
+  ["#5ee7ff","#ffd23f"], // cyan-yellow (the app's own default)
+  ["#ff8fd6","#a68bff"], // pink-purple
+  ["#8affc1","#5ee7ff"], // green-teal
+  ["#ffb26b","#ff6b6b"], // orange-red
+  ["#6ba8ff","#a68bff"], // blue-violet
+];
+function paletteForLesson(lesson){
+  const str = lesson.id || lesson.title || "";
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = (hash * 31 + str.charCodeAt(i)) >>> 0;
+  return CARD_PALETTES[hash % CARD_PALETTES.length];
+}
 
 function renderLessonGrid(){
   lessonGrid.innerHTML = "";
   ALL_LESSONS.forEach(lesson=>{
     const card = document.createElement("button");
     card.className = "lesson-card";
-    card.innerHTML = `<span class="lc-badge">${lesson.badge}</span>
+    const [c1, c2] = paletteForLesson(lesson);
+    card.style.setProperty("--card-accent-1", c1);
+    card.style.setProperty("--card-accent-2", c2);
+    card.innerHTML = `<span class="lc-note" style="color:${c1}">♪</span>
+                       <span class="lc-badge">${lesson.badge}</span>
                        <span class="lc-title">${lesson.title}</span>
                        <span class="lc-meta">${lesson.meta}</span>`;
     card.addEventListener("click", ()=> openLesson(lesson));
@@ -1784,54 +1832,6 @@ document.getElementById("importFile").addEventListener("change", (e)=>{
   reader.readAsText(file);
 });
 
-/* ---------- Export Student Version ----------
-   Builds a completely separate, self-contained HTML file: same app, same
-   engine, but with the teacher's current lessons baked in as read-only
-   built-ins and every editing/teacher-mode affordance switched off at the
-   source level (not just hidden by a toggle a student could flip back).
-   This is the "give students something they can only practice, not touch"
-   version — like a separate student build, handed out as its own file
-   rather than relying on localStorage (which never follows to another
-   device anyway) or JSON import (which the spec explicitly said students
-   shouldn't have to do). */
-document.getElementById("exportStudentBtn").addEventListener("click", ()=>{
-  const customList = ALL_LESSONS.filter(l => l.custom);
-  if (!customList.length){
-    alert("Add at least one lesson first — the student version bakes in whatever lessons you currently have.");
-    return;
-  }
-  // full page source, exactly as shipped (script tag contents are never
-  // rewritten by the app itself at runtime, so this is safe to reuse)
-  let src = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
-
-  // give each baked-in lesson a cleaner badge than "Your text" — this is
-  // now the teacher's finished material, not a draft
-  const baked = customList.map(l => ({...l, badge: "Lesson"}));
-
-  const lessonsLiteral = JSON.stringify(baked);
-  if (!src.includes("const LESSONS = [];")){
-    alert("Couldn't find the lesson data slot to bake into — export cancelled.");
-    return;
-  }
-  src = src.replace("const LESSONS = [];", "const LESSONS = " + lessonsLiteral + ";");
-
-  if (!src.includes("const FORCE_STUDENT_ONLY = false;")){
-    alert("Couldn't lock the student build — export cancelled.");
-    return;
-  }
-  src = src.replace("const FORCE_STUDENT_ONLY = false;", "const FORCE_STUDENT_ONLY = true;");
-
-  const blob = new Blob([src], {type: "text/html"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "word-on-beat-student.html";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(()=> URL.revokeObjectURL(url), 1000);
-});
-
 /* =========================================================================
    DISPLAY MODE — STRESS / BEAT / BOTH
    -------------------------------------------------------------------------
@@ -1874,6 +1874,8 @@ function openLesson(lesson){
   stageEl.classList.add("active");
   setPlayLabel(true);
   setHint('Tap <b>START</b>, or tap any word to jump there');
+  document.getElementById("settingsPopover").classList.remove("open");
+  document.getElementById("settingsToggle").classList.remove("open");
   maybeShowFirstRun();
 }
 
@@ -1906,6 +1908,13 @@ document.getElementById("speedRow").addEventListener("click", (e)=>{
 document.getElementById("fsBtn").addEventListener("click", ()=>{
   if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(()=>{});
   else document.exitFullscreen?.();
+});
+
+// Speed/volume/text-size live behind this gear so they don't permanently
+// eat into the lyrics area — most of a lesson, nobody's touching these.
+document.getElementById("settingsToggle").addEventListener("click", ()=>{
+  document.getElementById("settingsPopover").classList.toggle("open");
+  document.getElementById("settingsToggle").classList.toggle("open");
 });
 
 const metroVolSlider = document.getElementById("metroVolSlider");
